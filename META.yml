@@ -1,11 +1,11 @@
 --- #YAML:1.0
 name:                Parallel-Prefork
-version:             0.03
+version:             0.04
 abstract:            A simple prefork server framework
 license:             ~
 author:              
     - Kazuho Oku
-generated_by:        ExtUtils::MakeMaker version 6.42
+generated_by:        ExtUtils::MakeMaker version 6.44
 distribution_type:   module
 requires:     
     Class::Accessor::Fast:         0.31
