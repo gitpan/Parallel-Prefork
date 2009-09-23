@@ -9,7 +9,7 @@ use Proc::Wait3;
 
 __PACKAGE__->mk_accessors(qw/max_workers err_respawn_interval trap_signals signal_received manager_pid on_child_reap/);
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 sub new {
     my ($klass, $opts) = @_;
@@ -50,7 +50,11 @@ sub start {
         my $pid;
         if (keys %{$self->{worker_pids}} < $self->max_workers) {
             $pid = fork;
-            die 'fork error' unless defined $pid;
+            unless (defined $pid) {
+                warn "fork failed:$!";
+                sleep $self->err_respawn_interval;
+                next;
+            }
             unless ($pid) {
                 # child process
                 $self->{in_child} = 1;

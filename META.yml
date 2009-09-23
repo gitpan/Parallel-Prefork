@@ -1,15 +1,23 @@
 --- #YAML:1.0
-name:                Parallel-Prefork
-version:             0.04
-abstract:            A simple prefork server framework
-license:             ~
-author:              
+name:               Parallel-Prefork
+version:            0.05
+abstract:           A simple prefork server framework
+author:
     - Kazuho Oku
-generated_by:        ExtUtils::MakeMaker version 6.44
-distribution_type:   module
-requires:     
-    Class::Accessor::Fast:         0.31
-    Proc::Wait3:                   0.03
+license:            unknown
+distribution_type:  module
+configure_requires:
+    ExtUtils::MakeMaker:  0
+build_requires:
+    ExtUtils::MakeMaker:  0
+requires:
+    Class::Accessor::Fast:  0.31
+    Proc::Wait3:          0.03
+no_index:
+    directory:
+        - t
+        - inc
+generated_by:       ExtUtils::MakeMaker version 6.54
 meta-spec:
-    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
-    version: 1.3
+    url:      http://module-build.sourceforge.net/META-spec-v1.4.html
+    version:  1.4
