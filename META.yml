@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Parallel-Prefork
-version:            0.05
+version:            0.06
 abstract:           A simple prefork server framework
 author:
     - Kazuho Oku
@@ -12,7 +12,10 @@ build_requires:
     ExtUtils::MakeMaker:  0
 requires:
     Class::Accessor::Fast:  0.31
+    List::MoreUtils:      0
     Proc::Wait3:          0.03
+    Scope::Guard:         0
+    Time::HiRes:          0
 no_index:
     directory:
         - t
