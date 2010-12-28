@@ -14,7 +14,7 @@ use Class::Accessor::Lite (
     rw => [ qw/max_workers spawn_interval err_respawn_interval trap_signals signal_received manager_pid on_child_reap/ ],
 );
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 sub new {
     my $klass = shift;
@@ -36,11 +36,12 @@ sub new {
     $SIG{$_} = sub {
         $self->signal_received($_[0]);
     } for keys %{$self->trap_signals};
+    $SIG{CHLD} = sub {};
     $self;
 }
 
 sub start {
-    my $self = shift;
+    my ($self, $cb) = @_;
     
     $self->manager_pid($$);
     $self->signal_received('');
@@ -65,7 +66,12 @@ sub start {
                 # child process
                 $self->{in_child} = 1;
                 $SIG{$_} = 'DEFAULT' for keys %{$self->trap_signals};
+                $SIG{CHLD} = undef; # revert to original
                 exit 0 if $self->signal_received;
+                if ($cb) {
+                    $cb->();
+                    $self->finish();
+                }
                 return;
             }
             $self->{worker_pids}{$pid} = $self->{generation};
@@ -120,6 +126,8 @@ sub start {
 
 sub finish {
     my ($self, $exit_code) = @_;
+    die "\$parallel_prefork->finish() shouln't be called within the manager process\n"
+        if $self->manager_pid() == $$;
     exit($exit_code || 0);
 }
 
@@ -188,11 +196,7 @@ sub wait_all_children {
 
 sub _update_spawn_delay {
     my ($self, $secs) = @_;
-    $self->{_no_adjust_until} = $secs
-        ? max(
-            $self->{_no_adjust_until},
-            Time::HiRes::time() + $secs,
-        ) : 0;
+    $self->{_no_adjust_until} = $secs ? Time::HiRes::time() + $secs : 0;
 }
 
 # wrapper function of Proc::Wait3::wait3 that executes delayed task if any.  assumes wantarray == 1
@@ -249,11 +253,9 @@ Parallel::Prefork - A simple prefork server framework
   
   while ($pm->signal_received ne 'TERM') {
     load_config();
-    $pm->start and next;
-    
-    ... do some work within the child process ...
-    
-    $pm->finish;
+    $pm->start(sub {
+        ... do some work within the child process ...
+    });
   }
   
   $pm->wait_all_children();
@@ -291,11 +293,17 @@ the current Paralle::Prefork, the child's pid, and its exit status.
 
 =head2 start
 
-The main routine.  Returns undef in child processes.  Returns a true value within manager process upon receiving a signal specified in the C<trap_signals> hashref.
+The main routine.  There are two ways to use the function.
+
+If given a subref as an argument, forks child processes and executes that subref within the child processes.  The processes will exit with 0 status when the subref returns.
+
+The other way is to not give any arguments to the function.  The function returns undef in child processes.  Caller should execute the application logic and then call C<finish> to terminate the process.
+
+The C<start> function returns true within manager process upon receiving a signal specified in the C<trap_signals> hashref.
 
 =head2 finish
 
-Child processes should call this function for termination.  Takes exit code as an optional argument.  Only usable from child processes.
+Child processes (when executed by a zero-argument call to C<start>) should call this function for termination.  Takes exit code as an optional argument.  Only usable from child processes.
 
 =head2 signal_all_children
 
