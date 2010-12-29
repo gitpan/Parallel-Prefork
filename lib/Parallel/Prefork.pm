@@ -14,7 +14,7 @@ use Class::Accessor::Lite (
     rw => [ qw/max_workers spawn_interval err_respawn_interval trap_signals signal_received manager_pid on_child_reap/ ],
 );
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 sub new {
     my $klass = shift;
@@ -66,7 +66,7 @@ sub start {
                 # child process
                 $self->{in_child} = 1;
                 $SIG{$_} = 'DEFAULT' for keys %{$self->trap_signals};
-                $SIG{CHLD} = undef; # revert to original
+                $SIG{CHLD} = 'DEFAULT'; # revert to original
                 exit 0 if $self->signal_received;
                 if ($cb) {
                     $cb->();
