@@ -19,3 +19,4 @@ t/01-base.t
 t/02-reconfigure.t
 t/03-spareworkers.t
 t/04-interval.t
+t/05-before_after_fork.t

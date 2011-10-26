@@ -11,10 +11,10 @@ use Proc::Wait3 ();
 use Time::HiRes ();
 
 use Class::Accessor::Lite (
-    rw => [ qw/max_workers spawn_interval err_respawn_interval trap_signals signal_received manager_pid on_child_reap/ ],
+    rw => [ qw/max_workers spawn_interval err_respawn_interval trap_signals signal_received manager_pid on_child_reap before_fork after_fork/ ],
 );
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 sub new {
     my $klass = shift;
@@ -56,6 +56,9 @@ sub start {
                 && $self->_decide_action;
         if ($action > 0) {
             # start a new worker
+            if (my $subref = $self->before_fork) {
+                $subref->($self);
+            }
             my $pid = fork;
             unless (defined $pid) {
                 warn "fork failed:$!";
@@ -73,6 +76,9 @@ sub start {
                     $self->finish();
                 }
                 return;
+            }
+            if (my $subref = $self->after_fork) {
+                $subref->($self, $pid);
             }
             $self->{worker_pids}{$pid} = $self->{generation};
             $self->_update_spawn_delay($self->spawn_interval);
@@ -290,6 +296,12 @@ hashref of signals to be trapped.  Manager process will trap the signals listed 
 
 coderef that is called when a child is reaped. Receives the instance to
 the current Paralle::Prefork, the child's pid, and its exit status.
+
+=head3 before_fork
+
+=head3 after_fork
+
+coderefs that are called in the manager process before and after fork, if being set
 
 =head2 start
 
