@@ -49,6 +49,6 @@
          "http://dev.perl.org/licenses/"
       ]
    },
-   "version" : "0.15",
+   "version" : "0.16",
    "x_module_name" : "Parallel::Prefork"
 }
